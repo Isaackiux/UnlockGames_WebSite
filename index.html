@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #04040d;
+      --surface:       rgba(255,255,255,.04);
+      --surface-hover: rgba(255,255,255,.07);
+      --border:        rgba(124,58,237,.22);
+      --border-hover:  rgba(124,58,237,.65);
+      --accent:        #7c3aed;
+      --accent2:       #06b6d4;
+      --text:          #f1f5f9;
+      --muted:         #64748b;
+      --radius:        14px;
+      --glow:          0 0 28px rgba(124,58,237,.35), 0 8px 32px rgba(0,0,0,.5);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── background ambience ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 15% 10%, rgba(124,58,237,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 85%, rgba(6,182,212,.06) 0%, transparent 60%),
+        radial-gradient(ellipse 100% 60% at 50% 50%, rgba(124,58,237,.03) 0%, transparent 70%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative; z-index: 10;
+      text-align: center;
+      padding: 3.5rem 1rem 1.5rem;
+    }
+
+    .logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 700;
+      letter-spacing: .06em;
+      line-height: 1;
+      background: linear-gradient(130deg, #a78bfa 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px rgba(124,58,237,.4));
+      margin-bottom: .45rem;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 300;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      position: relative; z-index: 10;
+      max-width: 680px;
+      margin: 2rem auto 2.75rem;
+      padding: 0 1.25rem;
+    }
+
+    .search-row {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      margin-bottom: .85rem;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: .95rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    #search {
+      width: 100%;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 50px;
+      padding: .7rem 1rem .7rem 2.65rem;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: .93rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    #search::placeholder { color: var(--muted); }
+    #search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.18);
+    }
+
+    .sort-select {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 50px;
+      padding: .7rem 1.1rem;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: .85rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .2s;
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+    }
+    .sort-select:focus { border-color: var(--accent); }
+    .sort-select option { background: #1e1b4b; color: var(--text); }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .82rem;
+      color: var(--muted);
+      padding: 0 .25rem;
+    }
+
+    .stats-row b { color: var(--text); }
+
+    .updated {
+      font-size: .78rem;
+      opacity: .6;
+    }
+
+    /* ── GRID ── */
+    .grid-wrap {
+      position: relative; z-index: 10;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 1.25rem 5rem;
+    }
+
+    #game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.15rem;
+    }
+
+    /* ── CARD ── */
+    .game-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+      transform-style: preserve-3d;
+      will-change: transform;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: border-color .25s, box-shadow .25s;
+      /* fade-in animation */
+      opacity: 0;
+      animation: fadeUp .35s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .game-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: var(--glow);
+    }
+
+    /* cover */
+    .card-cover {
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(135deg, #1e1b4b 0%, #0c1a2e 100%);
+      flex-shrink: 0;
+    }
+
+    .card-cover img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transition: opacity .3s, transform .4s ease;
+    }
+    .card-cover img.ready { opacity: 1; }
+    .game-card:hover .card-cover img { transform: scale(1.04); }
+
+    /* placeholder cover */
+    .cover-ph {
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+    }
+    .cover-ph .ph-icon { opacity: .25; }
+    .cover-ph .ph-letter {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      opacity: .3;
+      letter-spacing: .05em;
+    }
+
+    /* card body */
+    .card-body {
+      padding: .8rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      flex: 1;
+    }
+
+    .card-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      line-height: 1.2;
+    }
+
+    .play-btn {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(124,58,237,.18);
+      border: 1px solid rgba(124,58,237,.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .game-card:hover .play-btn {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.12);
+    }
+
+    /* ── SKELETONS ── */
+    .skeleton {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .skeleton-cover {
+      aspect-ratio: 16/9;
+      background: rgba(255,255,255,.06);
+      animation: shimmer 1.6s ease-in-out infinite;
+    }
+    .skeleton-body {
+      padding: .8rem 1rem;
+      display: flex; gap: .75rem; align-items: center;
+    }
+    .sk-line {
+      height: 14px;
+      border-radius: 7px;
+      background: rgba(255,255,255,.07);
+      animation: shimmer 1.6s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: .5; }
+      50%       { opacity: 1; }
+    }
+
+    /* ── STATES ── */
+    .state-box {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+    }
+    .state-box h2 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: .5rem;
+    }
+    .state-box p { max-width: 460px; margin: .5rem auto; font-size: .9rem; line-height: 1.6; }
+    .err-box {
+      font-family: monospace; font-size: .78rem;
+      background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: 8px;
+      padding: .7rem 1rem;
+      margin: 1rem auto;
+      max-width: 520px;
+      color: #fca5a5;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 520px) {
+      #game-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .85rem; }
+      .logo { font-size: 2.4rem; }
+      .sort-select { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎮 Unlock Games</div>
+  <p class="tagline">Colección de juegos sin bloqueos de redes privadas.</p>
+</header>
+
+<div class="controls">
+  <div class="search-row">
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="search" id="search" placeholder="Buscar juego…" autocomplete="off">
+    </div>
+    <select class="sort-select" id="sort">
+      <option value="az">A → Z</option>
+      <option value="za">Z → A</option>
+    </select>
+  </div>
+  <div class="stats-row">
+    <span><b id="count">–</b> juegos</span>
+    <span class="updated" id="updated"></span>
+  </div>
+</div>
+
+<div class="grid-wrap">
+  <div id="game-grid"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIGURACIÓN
+// ══════════════════════════════════════════════
+// URL del Worker (detecta juegos en el bucket dinámicamente, sin scripts)
+const WORKER_URL    = "https://game-vault-api.isaackiux121.workers.dev"; // ← pega aquí tu URL de Worker
+
+// URL pública del bucket R2 (para servir portadas e index.html de cada juego)
+const R2_PUBLIC_URL = "https://pub-afa161aafc6242e3bfe7b0435d87d3d0.r2.dev";
+// ══════════════════════════════════════════════
+
+const grid    = document.getElementById("game-grid");
+const search  = document.getElementById("search");
+const sort    = document.getElementById("sort");
+const counter = document.getElementById("count");
+const updated = document.getElementById("updated");
+
+let allGames = [];
+
+const CACHE_KEY = "gv_games_cache";
+
+// ── helpers ─────────────────────────────────────────────
+function r2(path) { return `${R2_PUBLIC_URL}/${path}`; }
+
+function placeholderHTML(name) {
+  const ch = (name || "?").trim().charAt(0).toUpperCase();
+  return `<div class="cover-ph">
+    <svg class="ph-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <rect x="2" y="5" width="20" height="14" rx="3"/>
+      <path d="M9 9v6m3-3H6m12 0h-2m-1-1.5v3"/>
+    </svg>
+    <span class="ph-letter">${ch}</span>
+  </div>`;
+}
+
+function showPlaceholder(el, name) {
+  el.parentElement.innerHTML = placeholderHTML(name);
+}
+
+function skeletons(n) {
+  grid.innerHTML = Array(n).fill(`
+    <div class="skeleton">
+      <div class="skeleton-cover"></div>
+      <div class="skeleton-body">
+        <div class="sk-line" style="flex:1"></div>
+        <div class="sk-line" style="width:28px;border-radius:50%;flex-shrink:0"></div>
+      </div>
+    </div>`).join("");
+}
+
+// ── fetch games via Worker ───────────────────────────────
+function applyCache(data) {
+  allGames = data.games ?? [];
+  if (data.generated) {
+    const d = new Date(data.generated);
+    updated.textContent = `Actualizado ${d.toLocaleDateString("es", { day:"2-digit", month:"short", year:"numeric" })}`;
+  }
+  applyFilters();
+}
+
+async function loadGames() {
+  // Mostrar caché inmediatamente si existe (evita el parpadeo del skeleton)
+  let hasCached = false;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) {
+      applyCache(JSON.parse(raw));
+      hasCached = true;
+    }
+  } catch {}
+
+  if (!hasCached) skeletons(12);
+
+  // Siempre actualizar en segundo plano
+  try {
+    const res = await fetch(WORKER_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}\n\nAsegúrate de que:\n• WORKER_URL está bien configurada en index.html\n• El Worker está desplegado (wrangler deploy)\n• El binding R2 "GAMES" apunta al bucket correcto`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    applyCache(data);
+  } catch (err) {
+    if (!hasCached) {
+      grid.innerHTML = `
+        <div class="state-box">
+          <h2>No se pudo cargar la librería</h2>
+          <p>Despliega el Worker con <code>wrangler deploy</code> y pega la URL en <code>WORKER_URL</code>.</p>
+          <pre class="err-box">${err.message}</pre>
+        </div>`;
+    }
+  }
+}
+
+// ── render ───────────────────────────────────────────────
+function renderCards(games) {
+  if (games.length === 0) {
+    grid.innerHTML = `
+      <div class="state-box">
+        <h2>${search.value ? "Sin resultados" : "Sin juegos aún"}</h2>
+        <p>${search.value
+          ? `No se encontraron juegos para «<b>${search.value}</b>».`
+          : "Sube juegos con el script de upload y el manifest se generará automáticamente."
+        }</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = "";
+  games.forEach((game, i) => {
+    const gameUrl = r2(game.index ?? `${game.path}/index.html`);
+    const card = document.createElement("a");
+    card.className = "game-card";
+    card.href = gameUrl;
+    card.target = "_blank";
+    card.rel = "noopener";
+    card.style.animationDelay = `${Math.min(i * 25, 300)}ms`;
+
+    let coverHTML;
+    if (game.cover) {
+      const imgSrc = r2(game.cover);
+      const safeAlt  = game.name.replace(/"/g, "&quot;");
+      const safeName = game.name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+      coverHTML = `<img src="${imgSrc}" alt="${safeAlt}" loading="lazy"
+                        onload="this.classList.add('ready')"
+                        onerror="showPlaceholder(this,'${safeName}')">`;
+    } else {
+      coverHTML = placeholderHTML(game.name);
+    }
+
+    card.innerHTML = `
+      <div class="card-cover">${coverHTML}</div>
+      <div class="card-body">
+        <span class="card-name" title="${game.name}">${game.name}</span>
+        <span class="play-btn" aria-label="Jugar">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21"/>
+          </svg>
+        </span>
+      </div>`;
+
+    card.addEventListener("mousemove",  onTilt);
+    card.addEventListener("mouseleave", offTilt);
+
+    grid.appendChild(card);
+  });
+}
+
+// ── tilt on hover ────────────────────────────────────────
+function onTilt(e) {
+  const c = e.currentTarget, r = c.getBoundingClientRect();
+  const x = ((e.clientX - r.left) / r.width  - .5) * 12;
+  const y = ((e.clientY - r.top)  / r.height - .5) * 12;
+  c.style.transform = `perspective(900px) rotateX(${-y}deg) rotateY(${x}deg) translateZ(6px)`;
+}
+function offTilt(e) { e.currentTarget.style.transform = ""; }
+
+// ── filter + sort ────────────────────────────────────────
+function applyFilters() {
+  const q = search.value.trim().toLowerCase();
+  let list = q
+    ? allGames.filter(g => g.name.toLowerCase().includes(q) || g.id.toLowerCase().includes(q))
+    : [...allGames];
+
+  if (sort.value === "za") list.reverse();
+
+  counter.textContent = list.length;
+  renderCards(list);
+}
+
+search.addEventListener("input", applyFilters);
+sort.addEventListener("change", applyFilters);
+
+// ── go ───────────────────────────────────────────────────
+loadGames();
+</script>
+</body>
+</html>

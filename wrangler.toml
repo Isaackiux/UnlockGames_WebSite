@@ -1,0 +1,14 @@
+# Cloudflare Worker — Game Vault API
+# ─────────────────────────────────────────────────────────────────────────────
+# Despliega con:  wrangler deploy
+# ─────────────────────────────────────────────────────────────────────────────
+
+name               = "game-vault-api"        # nombre del Worker (aparece en la URL)
+main               = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Vincula el Worker al bucket R2 "games"
+# "binding" es el nombre que usa env.GAMES dentro del Worker
+[[r2_buckets]]
+binding     = "GAMES"
+bucket_name = "games"
